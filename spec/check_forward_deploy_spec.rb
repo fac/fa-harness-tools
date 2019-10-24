@@ -1,5 +1,3 @@
-require "spec_helper"
-
 describe FaHarnessTools::CheckForwardDeploy do
   describe "#verify?" do
     subject do
