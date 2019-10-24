@@ -46,5 +46,12 @@ module FaHarnessTools
     def is_ancestor_of?(ancestor, commit)
       !!@octokit.commits(owner_repo, commit).find { |c| c[:sha] == ancestor }
     end
+
+    # Checks if <commit> is on branch <branch>
+    #
+    # @return [Bool] True is <commit> is on <branch>
+    def branch_contains?(branch, commit)
+      !!@octokit.commits(owner_repo, branch).find { |c| c[:sha] == commit }
+    end
   end
 end

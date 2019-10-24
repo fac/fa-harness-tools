@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+
+require "fa-harness-tools"
+require "optparse"
+
+options = {
+  github_owner: "fac",
+  branch: "master",
+}
+OptionParser.new do |opts|
+  opts.banner = "Usage: check-branch-protection [options]"
+
+  opts.on("--branch NAME", "Git branch to verify this deployed commit is on, defaults to 'master'") do |v|
+    options[:branch] = v
+  end
+
+  opts.on("-b", "--build-no REVISION", "Build number/deployment revision") do |v|
+    options[:build_no] = v
+  end
+
+  opts.on("-e", "--environment NAME", "Environment name") do |v|
+    options[:environment] = v
+  end
+
+  opts.on("--github-owner NAME", "GitHub organisation/owner name, defaults to 'fac'") do |v|
+    options[:github_owner] = v
+  end
+
+  opts.on("-r", "--repository NAME", "GitHub repository name") do |v|
+    options[:repo] = v
+  end
+end.parse!
+
+client = FaHarnessTools::GithubClient.new(
+  oauth_token: ENV.fetch("GITHUB_OAUTH_TOKEN"),
+  owner: options.fetch(:github_owner),
+  repo: options.fetch(:repo),
+)
+context = FaHarnessTools::HarnessContext.new(
+  client: client,
+  environment: options.fetch(:environment),
+  build_no: options.fetch(:build_no),
+)
+
+result = FaHarnessTools::CheckBranchProtection.new(
+  client: client,
+  context: context,
+  branch: options.fetch(:branch),
+).verify?
+
+if result.first
+  puts result.last
+  exit 0
+else
+  $stderr.puts result.last
+  exit 1
+end
