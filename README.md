@@ -20,9 +20,27 @@ Or install it yourself as:
 
 ## Usage
 
-### fa-create-tag
+Examples below use [variables defined by Harness](https://docs.harness.io/article/9dvxcegm90-variables) so should be suitable to use directly in Harness scripts.
 
-...
+### check-branch-brotection
+
+Check the new build/commit being deployed is on the master branch:
+
+```
+bundle exec exe/check-branch-protection -r ${artifact.source.repositoryName} -e ${env.name} -b ${artifact.buildNo}
+```
+
+(Branch name etc can be changed, see `--help` for more options.)
+
+### check-forward-deploy
+
+Using a Git tag indicating the last deployment, check that the new commit being deployed is a descendant of the current commit:
+
+```
+bundle exec exe/check-forward-deploy -r ${artifact.source.repositoryName} -e ${env.name} -b ${artifact.buildNo}
+```
+
+(Tag prefix etc can be changed, see `--help` for more options.)
 
 ## Development
 
