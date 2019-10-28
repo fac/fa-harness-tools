@@ -27,8 +27,10 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "octokit", "~> 4.0"
+  spec.add_runtime_dependency "tzinfo", "~> 2.0"
 
   spec.add_development_dependency "bundler", "~> 1.0"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.8"
+  spec.add_development_dependency "timecop", "~> 0.9"
 end
