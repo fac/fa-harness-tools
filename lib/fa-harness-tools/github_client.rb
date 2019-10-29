@@ -63,5 +63,13 @@ module FaHarnessTools
     def branch_contains?(branch, commit)
       !!@octokit.commits(owner_repo, branch).find { |c| c[:sha] == commit }
     end
+
+    # Creates a Git tag
+    #
+    # Arguments match Octokit::Client::Objects#create_tag, minus first repo argument
+    # (http://octokit.github.io/octokit.rb/Octokit/Client/Objects.html#create_tag-instance_method)
+    def create_tag(*args)
+      @octokit.create_tag(owner_repo, *args)
+    end
   end
 end

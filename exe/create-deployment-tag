@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+
+require "fa-harness-tools"
+require "optparse"
+require "time"
+
+options = {
+  github_owner: "fac",
+  tag_prefix: "harness-deploy",
+  tagger_email: "harness@example.com",
+  tagger_name: "Harness",
+}
+OptionParser.new do |opts|
+  opts.banner = "Usage: create-deployment-tag [options]"
+
+  opts.on("-b", "--build-no REVISION", "Build number/deployment revision") do |v|
+    options[:build_no] = v
+  end
+
+  opts.on("-e", "--environment NAME", "Environment name") do |v|
+    options[:environment] = v
+  end
+
+  opts.on("--github-owner NAME", "GitHub organisation/owner name, defaults to 'fac'") do |v|
+    options[:github_owner] = v
+  end
+
+  opts.on("-r", "--repository NAME", "GitHub repository name") do |v|
+    options[:repo] = v
+  end
+
+  opts.on("--tag-prefix PREFIX", "Git tag prefix, defaults to 'harness-deploy'") do |v|
+    options[:tag_prefix] = v
+  end
+
+  opts.on("--tagger-email EMAIL", "Author email address for the Git tag, defaults to 'harness@example.com'") do |v|
+    options[:tagger_email] = v
+  end
+
+  opts.on("--tagger-name NAME", "Author name for the Git tag, defaults to 'Harness'") do |v|
+    options[:tagger_name] = v
+  end
+end.parse!
+
+client = FaHarnessTools::GithubClient.new(
+  oauth_token: ENV.fetch("GITHUB_OAUTH_TOKEN"),
+  owner: options.fetch(:github_owner),
+  repo: options.fetch(:repo),
+)
+context = FaHarnessTools::HarnessContext.new(
+  client: client,
+  environment: options.fetch(:environment),
+  build_no: options.fetch(:build_no),
+)
+
+tag_time = Time.now.utc
+timestamp = tag_time.strftime("%Y-%m-%dT%H-%M-%SZ")
+
+tag = client.create_tag(
+  "#{options.fetch(:tag_prefix)}-#{context.environment}-#{timestamp}",
+  "Harness deployment at #{timestamp}",
+  context.new_commit_sha,
+  "commit",
+  options.fetch(:tagger_name),
+  options.fetch(:tagger_email),
+  tag_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+)
+
+puts "Created tag #{tag[:tag]}"

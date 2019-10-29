@@ -60,6 +60,16 @@ Check the current time is within the deployment window of Mon-Thu 9am to 4pm, or
 bundle exec exe/check-schedule
 ```
 
+### create-deployment-tag
+
+Creates a Git tag in the project repository to indicate the deployment has happened:
+
+```
+bundle exec exe/create-deployment-tag -r ${artifact.source.repositoryName} -e ${env.name} -b ${artifact.buildNo}
+```
+
+(Tagger's name and email address etc can be changed, see `--help` for more options.)
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
