@@ -42,6 +42,14 @@ bundle exec exe/check-forward-deploy -r ${artifact.source.repositoryName} -e ${e
 
 (Tag prefix etc can be changed, see `--help` for more options.)
 
+### check-schedule
+
+Check the current time is within the deployment window of Mon-Thu 9am to 4pm, or Fri 9am to 12pm, using local London time.
+
+```
+bundle exec exe/check-schedule
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
