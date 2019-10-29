@@ -15,6 +15,18 @@ module FaHarnessTools
       "#{owner}/#{repo}"
     end
 
+    # Return all tags starting "harness-deploy-ENV-"
+    #
+    # Used to find deployments in an environment. The commit SHA of the tag is
+    # in [:commit][:sha] in the returned hash.
+    #
+    # @return [Array[Hash]] Array of tag data hash, or [] if none
+    def all_deploy_tags(prefix:, environment:)
+      @octokit.tags(owner_repo).find_all do |tag|
+        tag[:name].start_with?("#{prefix}-#{environment}-")
+      end
+    end
+
     # Return the last (when sorted) tag starting "harness-deploy-ENV-"
     #
     # Used to find the most recent deployment in an environment. The commit SHA
@@ -22,9 +34,7 @@ module FaHarnessTools
     #
     # @return [Hash] Tag data hash, or nil if none
     def last_deploy_tag(prefix:, environment:)
-      last_tag = @octokit.tags(owner_repo).find_all do |tag|
-        tag[:name].start_with?("#{prefix}-#{environment}-")
-      end.sort_by { |tag| tag[:name] }.last
+      last_tag = all_deploy_tags.sort_by { |tag| tag[:name] }.last
       last_tag ? last_tag : nil
     end
 

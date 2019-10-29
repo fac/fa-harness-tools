@@ -42,6 +42,16 @@ bundle exec exe/check-forward-deploy -r ${artifact.source.repositoryName} -e ${e
 
 (Tag prefix etc can be changed, see `--help` for more options.)
 
+### check-recent-deploy
+
+Using Git tags indicating recent deployments, check the commit being deployed is one of the last X commits or newer. Allows a user to rollback by X deployments.
+
+```
+bundle exec exe/check-recent-deploy -r ${artifact.source.repositoryName} -e ${env.name} -b ${artifact.buildNo}
+```
+
+(Allowed rollback count and tag prefix etc can be changed, see `--help` for more options.)
+
 ### check-schedule
 
 Check the current time is within the deployment window of Mon-Thu 9am to 4pm, or Fri 9am to 12pm, using local London time.

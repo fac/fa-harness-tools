@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+
+require "fa-harness-tools"
+require "optparse"
+
+options = {
+  allowed_rollback_count: 3,
+  github_owner: "fac",
+  tag_prefix: "harness-deploy",
+}
+OptionParser.new do |opts|
+  opts.banner = "Usage: check-recent-deploy [options]"
+
+  opts.on("--allowed-rollback-count NUMBER", "Number of deployments that can be rolled back, defaults to 3") do |v|
+    options[:allowed_rollback_count] = v.to_i
+  end
+
+  opts.on("-b", "--build-no REVISION", "Build number/deployment revision") do |v|
+    options[:build_no] = v
+  end
+
+  opts.on("-e", "--environment NAME", "Environment name") do |v|
+    options[:environment] = v
+  end
+
+  opts.on("--github-owner NAME", "GitHub organisation/owner name, defaults to 'fac'") do |v|
+    options[:github_owner] = v
+  end
+
+  opts.on("-r", "--repository NAME", "GitHub repository name") do |v|
+    options[:repo] = v
+  end
+
+  opts.on("--tag-prefix PREFIX", "Git tag prefix, defaults to 'harness-deploy'") do |v|
+    options[:tag_prefix] = v
+  end
+end.parse!
+
+client = FaHarnessTools::GithubClient.new(
+  oauth_token: ENV.fetch("GITHUB_OAUTH_TOKEN"),
+  owner: options.fetch(:github_owner),
+  repo: options.fetch(:repo),
+)
+context = FaHarnessTools::HarnessContext.new(
+  client: client,
+  environment: options.fetch(:environment),
+  build_no: options.fetch(:build_no),
+)
+
+result = FaHarnessTools::CheckRecentDeploy.new(
+  client: client,
+  context: context,
+  tag_prefix: options.fetch(:tag_prefix),
+  allowed_rollback_count: options.fetch(:allowed_rollback_count),
+).verify?
+
+if result.first
+  puts result.last
+  exit 0
+else
+  $stderr.puts result.last
+  exit 1
+end
