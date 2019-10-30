@@ -22,6 +22,10 @@ Or install it yourself as:
 
 Examples below use [variables defined by Harness](https://docs.harness.io/article/9dvxcegm90-variables) so should be suitable to use directly in Harness scripts.
 
+### Required environment variables
+
+* `GITHUB_OAUTH_TOKEN` must be exported, containing a valid [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) for GitHub
+
 ### check-branch-brotection
 
 Check the new build/commit being deployed is on the master branch:
