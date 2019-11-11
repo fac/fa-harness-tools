@@ -34,7 +34,7 @@ module FaHarnessTools
         all_deploy_tags(prefix: @tag_prefix, environment: @context.environment).
         sort_by { |tag| tag[:name] }
 
-      latest_allowed_tag = tags[@allowed_rollback_count * -1]
+      latest_allowed_tag = tags.last(@allowed_rollback_count).first
 
       if latest_allowed_tag.nil?
         # If no previous deploys we need to let it deploy otherwise it will

@@ -38,6 +38,20 @@ describe FaHarnessTools::CheckRecentDeploy do
       end
     end
 
+    context "with one git tag" do
+      let(:git_tags) do
+        [
+          { name: "harness-deploy-production-2019-10-26T13-40-00Z", commit: { sha: "123456" } },
+        ]
+      end
+
+      it "returns true when deploying only existing tag" do
+        allow(harness_context).to receive(:new_commit_sha).and_return("234567")
+        allow(client).to receive(:is_ancestor_of?).with("123456", "234567").and_return(true)
+        expect(subject.verify?).to eq([true, "234567 is ahead of no.3 most recent commit with \"harness-deploy\" tag"])
+      end
+    end
+
     it "returns true for latest commit beyond rollback tag" do
       allow(harness_context).to receive(:new_commit_sha).and_return("567890")
       allow(client).to receive(:is_ancestor_of?).with("234567", "567890").and_return(true)
