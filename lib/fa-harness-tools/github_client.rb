@@ -68,8 +68,9 @@ module FaHarnessTools
     #
     # Arguments match Octokit::Client::Objects#create_tag, minus first repo argument
     # (http://octokit.github.io/octokit.rb/Octokit/Client/Objects.html#create_tag-instance_method)
-    def create_tag(*args)
-      @octokit.create_tag(owner_repo, *args)
+    def create_tag(tag, message, commit_sha, *args)
+      @octokit.create_ref(owner_repo, "tags/#{tag}", commit_sha)
+      @octokit.create_tag(owner_repo, tag, message, commit_sha, *args)
     end
   end
 end
