@@ -1,9 +1,10 @@
 PATH
   remote: .
   specs:
-    fa-harness-tools (0.1.0)
+    fa-harness-tools (1.0.0)
       octokit (~> 4.0)
       tzinfo (~> 2.0)
+      tzinfo-data (~> 1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -38,6 +39,8 @@ GEM
     timecop (0.9.1)
     tzinfo (2.0.0)
       concurrent-ruby (~> 1.0)
+    tzinfo-data (1.2019.3)
+      tzinfo (>= 1.0.0)
 
 PLATFORMS
   ruby
