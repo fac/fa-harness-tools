@@ -34,7 +34,8 @@ module FaHarnessTools
     #
     # @return [Hash] Tag data hash, or nil if none
     def last_deploy_tag(prefix:, environment:)
-      last_tag = all_deploy_tags.sort_by { |tag| tag[:name] }.last
+      last_tag = all_deploy_tags(prefix: prefix, environment: environment).
+        sort_by { |tag| tag[:name] }.last
       last_tag ? last_tag : nil
     end
 
