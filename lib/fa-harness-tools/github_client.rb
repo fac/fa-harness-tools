@@ -22,9 +22,12 @@ module FaHarnessTools
     #
     # @return [Array[Hash]] Array of tag data hash, or [] if none
     def all_deploy_tags(prefix:, environment:)
+      @octokit.auto_paginate = true
       @octokit.tags(owner_repo).find_all do |tag|
         tag[:name].start_with?("#{prefix}-#{environment}-")
       end
+    ensure
+      @octokit.auto_paginate = false
     end
 
     # Return the last (when sorted) tag starting "harness-deploy-ENV-"
@@ -55,14 +58,14 @@ module FaHarnessTools
     #
     # @return [Bool] True is <ancestor> is ancestor of <commit>
     def is_ancestor_of?(ancestor, commit)
-      !!@octokit.commits(owner_repo, commit).find { |c| c[:sha] == ancestor }
+      !!find_commit(commit) { |c| c[:sha] == ancestor }
     end
 
     # Checks if <commit> is on branch <branch>
     #
     # @return [Bool] True is <commit> is on <branch>
     def branch_contains?(branch, commit)
-      !!@octokit.commits(owner_repo, branch).find { |c| c[:sha] == commit }
+      !!find_commit(branch) { |c| c[:sha] == commit }
     end
 
     # Creates a Git tag
@@ -72,6 +75,20 @@ module FaHarnessTools
     def create_tag(tag, message, commit_sha, *args)
       @octokit.create_ref(owner_repo, "tags/#{tag}", commit_sha)
       @octokit.create_tag(owner_repo, tag, message, commit_sha, *args)
+    end
+
+    private
+
+    # Paginate over commits from a given sha/branch, and exit early if the
+    # supplied block matches
+    def find_commit(sha_or_branch, &block)
+      result = @octokit.commits(owner_repo, sha_or_branch).find(&block)
+      response = @octokit.last_response
+      until result || !response.rels[:next]
+        response = response.rels[:next].get
+        result = response.data.find(&block)
+      end
+      result
     end
   end
 end
