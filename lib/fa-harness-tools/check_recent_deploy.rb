@@ -42,7 +42,7 @@ module FaHarnessTools
         return true, "first deploy"
       end
 
-      latest_allowed_rev = latest_allowed_tag[:commit][:sha]
+      latest_allowed_rev = @client.get_commit_sha_from_tag(latest_allowed_tag)
       rev = @context.new_commit_sha
 
       if @client.is_ancestor_of?(latest_allowed_rev, rev)

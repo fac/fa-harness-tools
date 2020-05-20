@@ -17,16 +17,17 @@ describe FaHarnessTools::CheckRecentDeploy do
     end
     let(:git_tags) do
       [
-        { name: "harness-deploy-production-2019-10-29T10-10-00Z", commit: { sha: "456789" } },
-        { name: "harness-deploy-production-2019-10-28T11-20-00Z", commit: { sha: "345678" } },
-        { name: "harness-deploy-production-2019-10-27T12-30-00Z", commit: { sha: "234567" } },
-        { name: "harness-deploy-production-2019-10-26T13-40-00Z", commit: { sha: "123456" } },
+        { name: "harness-deploy-production-2019-10-29T10-10-00Z", tag_sha: "400000" },
+        { name: "harness-deploy-production-2019-10-28T11-20-00Z", tag_sha: "300000" },
+        { name: "harness-deploy-production-2019-10-27T12-30-00Z", tag_sha: "500000" },
+        { name: "harness-deploy-production-2019-10-26T13-40-00Z", tag_sha: "900000" },
       ]
     end
 
     before do
       allow(harness_context).to receive(:environment).and_return("production")
       allow(client).to receive(:all_deploy_tags).and_return(git_tags)
+      allow(client).to receive(:get_commit_sha_from_tag).with(git_tags[2]).and_return("234567")
     end
 
     context "with no git tags" do
@@ -41,8 +42,12 @@ describe FaHarnessTools::CheckRecentDeploy do
     context "with one git tag" do
       let(:git_tags) do
         [
-          { name: "harness-deploy-production-2019-10-26T13-40-00Z", commit: { sha: "123456" } },
+          { name: "harness-deploy-production-2019-10-26T13-40-00Z", commit: { sha: "200000" } },
         ]
+      end
+
+      before do
+        allow(client).to receive(:get_commit_sha_from_tag).with(git_tags[0]).and_return("123456")
       end
 
       it "returns true when deploying only existing tag" do
