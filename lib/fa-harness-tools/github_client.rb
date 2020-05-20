@@ -17,17 +17,24 @@ module FaHarnessTools
 
     # Return all tags starting "harness-deploy-ENV-"
     #
-    # Used to find deployments in an environment. The commit SHA of the tag is
-    # in [:commit][:sha] in the returned hash.
+    # Used to find deployments in an environment. Provides only the tag name
+    # and object, though that may be an annotated tag or a commit.
+    #
+    # Use #get_commit_sha_from_tag to reliably find the commit that a tag
+    # points to.
     #
     # @return [Array[Hash]] Array of tag data hash, or [] if none
     def all_deploy_tags(prefix:, environment:)
-      @octokit.auto_paginate = true
-      @octokit.tags(owner_repo).find_all do |tag|
-        tag[:name].start_with?("#{prefix}-#{environment}-")
+      # #refs is a much quicker way than #tags to pull back all tag names, so
+      # we prefer this and then fetch commit information only when we need it
+      @octokit.refs(owner_repo, "tags/#{prefix}-#{environment}-").map do |ref|
+        {
+          name: ref[:ref][10..-1], # remove refs/tags/ prefix
+          object: ref[:object],
+        }
       end
-    ensure
-      @octokit.auto_paginate = false
+    rescue Octokit::NotFound
+      []
     end
 
     # Return the last (when sorted) tag starting "harness-deploy-ENV-"
@@ -39,7 +46,11 @@ module FaHarnessTools
     def last_deploy_tag(prefix:, environment:)
       last_tag = all_deploy_tags(prefix: prefix, environment: environment).
         sort_by { |tag| tag[:name] }.last
-      last_tag ? last_tag : nil
+      return nil unless last_tag
+
+      last_tag.merge(
+        commit: { sha: get_commit_sha_from_tag(last_tag) },
+      )
     end
 
     # Return a full commit SHA from a short SHA
@@ -50,6 +61,28 @@ module FaHarnessTools
       commit = @octokit.commit(owner_repo, short_sha)
       raise LookupError, "Unable to find commit #{short_sha} in Git repo" unless commit
       commit[:sha]
+    end
+
+    # Return a full commit SHA from a tag
+    #
+    # The `tag` argument should be a Hash of tag data with an :object that can
+    # either be an annotated tag or a commit object.
+    #
+    # @return [String] Full commit SHA
+    # @raise [LookupError] If tag cannot be found
+    def get_commit_sha_from_tag(tag)
+      case tag[:object][:type]
+      when "commit"
+        tag[:object][:sha]
+      when "tag"
+        # When a tag points to a tag, recurse into it until we find a commit object
+        refed_tag = @octokit.tag(owner_repo, tag[:object][:sha])
+        get_commit_sha_from_tag(refed_tag.to_h.merge(tag.slice(:name)))
+      else
+        raise LookupError, "Tag #{tag[:name]} points to a non-commit object (#{tag[:object].inspect})"
+      end
+    rescue Octokit::NotFound
+      raise LookupError, "Unable to find tag #{tag.inspect} in Git repo"
     end
 
     # Checks if <ancestor> is an ancestor of <commit>
