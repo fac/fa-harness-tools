@@ -172,4 +172,64 @@ describe FaHarnessTools::GithubClient do
       end.to raise_error(FaHarnessTools::LookupError, /Unable to find tag/)
     end
   end
+
+  describe "#is_ancestor_of?" do
+    it "returns true when 'commit' is related to 'ancestor'" do
+      compare_data = {
+        url: "https://api.github.com/repos/fac/example/compare/e7eabe7...5167e6c",
+        merge_base_commit: {
+          sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+          node_id: "MDY6Q29tbWl0MTc0MzU5Mzc6ZTdlYWJlN2RkMWZiZTdkZGY3NTc0NmI2MjAzZGE4MTllOGFiYjY1Yw==",
+        },
+      }
+      allow(octokit).to receive(:commit).with("fac/example", "e7eabe7").and_return(sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c")
+      expect(octokit).to receive(:compare).with("fac/example", "e7eabe7", "5167e6c").and_return(compare_data)
+
+      expect(subject.is_ancestor_of?("e7eabe7", "5167e6c")).to be true
+    end
+
+    it "returns false when 'commit' and 'ancestor' are not directly related" do
+      compare_data = {
+        url: "https://api.github.com/repos/fac/example/compare/5167e6c...5167e6c",
+        merge_base_commit: {
+          sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+          node_id: "MDY6Q29tbWl0MTc0MzU5Mzc6ZTdlYWJlN2RkMWZiZTdkZGY3NTc0NmI2MjAzZGE4MTllOGFiYjY1Yw==",
+        },
+      }
+      allow(octokit).to receive(:commit).with("fac/example", "0d0c606").and_return(sha: "0d0c6063edffee0dd0da94a66e3caafa7bde9fea")
+      expect(octokit).to receive(:compare).with("fac/example", "0d0c606", "5167e6c").and_return(compare_data)
+
+      expect(subject.is_ancestor_of?("0d0c606", "5167e6c")).to be false
+    end
+  end
+
+  describe "#branch_contains?" do
+    it "returns true when 'commit' is on the branch" do
+      compare_data = {
+        url: "https://api.github.com/repos/fac/example/compare/master...e7eabe7",
+        merge_base_commit: {
+          sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+          node_id: "MDY6Q29tbWl0MTc0MzU5Mzc6ZTdlYWJlN2RkMWZiZTdkZGY3NTc0NmI2MjAzZGE4MTllOGFiYjY1Yw==",
+        },
+      }
+      allow(octokit).to receive(:commit).with("fac/example", "e7eabe7").and_return(sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c")
+      expect(octokit).to receive(:compare).with("fac/example", "e7eabe7", "master").and_return(compare_data)
+
+      expect(subject.branch_contains?("master", "e7eabe7")).to be true
+    end
+
+    it "returns false when 'commit' and 'ancestor' are not directly related" do
+      compare_data = {
+        url: "https://api.github.com/repos/fac/example/compare/master...5167e6c",
+        merge_base_commit: {
+          sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+          node_id: "MDY6Q29tbWl0MTc0MzU5Mzc6ZTdlYWJlN2RkMWZiZTdkZGY3NTc0NmI2MjAzZGE4MTllOGFiYjY1Yw==",
+        },
+      }
+      allow(octokit).to receive(:commit).with("fac/example", "0d0c606").and_return(sha: "0d0c6063edffee0dd0da94a66e3caafa7bde9fea")
+      expect(octokit).to receive(:compare).with("fac/example", "0d0c606", "master").and_return(compare_data)
+
+      expect(subject.branch_contains?("master", "0d0c606")).to be false
+    end
+  end
 end

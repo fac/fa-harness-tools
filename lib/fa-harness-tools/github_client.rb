@@ -91,14 +91,20 @@ module FaHarnessTools
     #
     # @return [Bool] True is <ancestor> is ancestor of <commit>
     def is_ancestor_of?(ancestor, commit)
-      !!find_commit(commit) { |c| c[:sha] == ancestor }
+      # Compare returns the merge base, the common point in history between the
+      # two commits. If X is the ancestor of Y, then the merge base must be X.
+      # If not, it's a different branch.
+      @octokit.compare(owner_repo, ancestor, commit)[:merge_base_commit][:sha] == get_commit_sha(ancestor)
     end
 
     # Checks if <commit> is on branch <branch>
     #
     # @return [Bool] True is <commit> is on <branch>
     def branch_contains?(branch, commit)
-      !!find_commit(branch) { |c| c[:sha] == commit }
+      # The same implementation works for this question. We have both methods
+      # to make the intent clearer and also this one is guaranteed to resolve a
+      # branch name for the first argument.
+      is_ancestor_of?(commit, branch)
     end
 
     # Creates a Git tag
@@ -108,20 +114,6 @@ module FaHarnessTools
     def create_tag(tag, message, commit_sha, *args)
       @octokit.create_ref(owner_repo, "tags/#{tag}", commit_sha)
       @octokit.create_tag(owner_repo, tag, message, commit_sha, *args)
-    end
-
-    private
-
-    # Paginate over commits from a given sha/branch, and exit early if the
-    # supplied block matches
-    def find_commit(sha_or_branch, &block)
-      result = @octokit.commits(owner_repo, sha_or_branch).find(&block)
-      response = @octokit.last_response
-      until result || !response.rels[:next]
-        response = response.rels[:next].get
-        result = response.data.find(&block)
-      end
-      result
     end
   end
 end
