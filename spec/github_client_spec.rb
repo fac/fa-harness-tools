@@ -10,7 +10,52 @@ describe FaHarnessTools::GithubClient do
   let(:octokit) { instance_double(Octokit::Client) }
 
   before do
-    expect(Octokit::Client).to receive(:new).with(access_token: "none").and_return(octokit)
+    allow(Octokit::Client).to receive(:new).with(access_token: "none").and_return(octokit)
+    allow(octokit).to receive(:repo).with("fac/example")
+  end
+
+  describe "#initialize" do
+    context "when the user requests a valid repository" do
+      it "does not raise an error" do
+        expect { subject }.not_to raise_error
+      end
+    end
+
+    context "when the user requests an invalid repository" do
+      context "and the user has specified an oauth token" do
+        it "raises a LookupError with an appropriate error message" do
+          expect(octokit).to receive(:repo).with("fac/not_found").and_raise Octokit::NotFound
+          expect(Octokit::Client).to receive(:new).with(access_token: "AAA").and_return(octokit)
+
+          expected_message = "Unable to find repository fac/not_found"
+
+          expect do
+            described_class.new(
+              oauth_token: "AAA",
+              owner: "fac",
+              repo: "not_found",
+            )
+          end.to raise_error FaHarnessTools::LookupError, expected_message
+        end
+      end
+
+      context "and the user has not specified an oauth token" do
+        it "raises a LookupError with an appropriate error message" do
+          expect(octokit).to receive(:repo).with("fac/private_repo").and_raise Octokit::NotFound
+          expect(Octokit::Client).to receive(:new).with(access_token: nil).and_return(octokit)
+
+          expected_message  = "Unable to find repository fac/private_repo. If the repository is private, try setting GITHUB_OAUTH_TOKEN"
+
+          expect do
+            described_class.new(
+              oauth_token: nil,
+              owner: "fac",
+              repo: "private_repo",
+            )
+          end.to raise_error FaHarnessTools::LookupError, expected_message
+        end
+      end
+    end
   end
 
   describe "#owner_repo" do

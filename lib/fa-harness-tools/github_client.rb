@@ -9,6 +9,8 @@ module FaHarnessTools
       @octokit = Octokit::Client.new(access_token: oauth_token)
       @owner = owner
       @repo = repo
+      @oauth_token = oauth_token
+      validate_repo
     end
 
     def owner_repo
@@ -114,6 +116,19 @@ module FaHarnessTools
     def create_tag(tag, message, commit_sha, *args)
       @octokit.create_ref(owner_repo, "tags/#{tag}", commit_sha)
       @octokit.create_tag(owner_repo, tag, message, commit_sha, *args)
+    end
+
+    private
+
+    # Validates a repository exists.
+    # Raises a `LookupError` in the event a repository can't be found.
+    def validate_repo
+      @octokit.repo(owner_repo)
+
+    rescue Octokit::NotFound
+      message = "Unable to find repository #{owner_repo}"
+      message = "#{message}. If the repository is private, try setting GITHUB_OAUTH_TOKEN" unless @oauth_token
+      raise LookupError, message
     end
   end
 end
