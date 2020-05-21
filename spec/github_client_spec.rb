@@ -13,6 +13,105 @@ describe FaHarnessTools::GithubClient do
     expect(Octokit::Client).to receive(:new).with(access_token: "none").and_return(octokit)
   end
 
+  describe "#owner_repo" do
+    it "equals owner/repo" do
+      expect(subject.owner_repo).to eq("fac/example")
+    end
+  end
+
+  describe "#all_deploy_tags" do
+    it "should return array of names and objects" do
+      tag_data = [
+        {
+          ref: "refs/tags/deploy-prod-example-tag",
+          node_id: "MDM6UmVmMTc0MzU5Mzc6cmVmcy90YWdzL2hhcm5lc3MtZGVwbG95LXByb2QtMjAyMC0wNS0yMFQxMC0yNC0wN1o=",
+          url: "https://api.github.com/repos/fac/example/git/refs/tags/deploy-prod-example-tag",
+          object: {
+            sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+            type: "commit",
+            url: "https://api.github.com/repos/fac/example/git/commits/e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+          },
+        }
+      ]
+      expect(octokit).to receive(:refs).with("fac/example", "tags/deploy-prod-").and_return(tag_data)
+
+      expected = [
+        {
+          name: "deploy-prod-example-tag",
+          object: {
+            sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+            type: "commit",
+            url: "https://api.github.com/repos/fac/example/git/commits/e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+          },
+        }
+      ]
+      expect(subject.all_deploy_tags(prefix: "deploy", environment: "prod")).to eq(expected)
+    end
+
+    it "should return empty array if no matching refs found" do
+      expect(octokit).to receive(:refs).with("fac/example", "tags/deploy-prod-").and_raise(Octokit::NotFound)
+      expect(subject.all_deploy_tags(prefix: "deploy", environment: "prod")).to eq([])
+    end
+  end
+
+  describe "#last_deploy_tag" do
+    it "returns the latest tag" do
+      matching_tags = [
+        {
+          name: "deploy-prod-2020-01-14T09-14-52Z",
+          object: {
+            sha: "b371aa1e4b1c37f830ef57c98250141c14e7591b",
+            type: "commit",
+            url: "https://api.github.com/repos/fac/example/git/commits/b371aa1e4b1c37f830ef57c98250141c14e7591b",
+          },
+        },
+        {
+          name: "deploy-prod-2020-05-20T10-24-07Z",
+          object: {
+            sha: "1ca5879492b8fd606df1964ea3c1e2f4520f076f",
+            type: "commit",
+            url: "https://api.github.com/repos/fac/example/git/commits/1ca5879492b8fd606df1964ea3c1e2f4520f076f",
+          },
+        },
+        {
+          name: "deploy-prod-2020-02-05T14-00-42Z",
+          object: {
+            sha: "e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+            type: "commit",
+            url: "https://api.github.com/repos/fac/example/git/commits/e7eabe7dd1fbe7ddf75746b6203da819e8abb65c",
+          },
+        },
+      ]
+      expect(subject).to receive(:all_deploy_tags).with(prefix: "deploy", environment: "prod").and_return(matching_tags)
+
+      expected = matching_tags[1].merge(commit: { sha: "1ca5879492b8fd606df1964ea3c1e2f4520f076f" })
+      expect(subject.last_deploy_tag(prefix: "deploy", environment: "prod")).to eq(expected)
+    end
+
+    it "returns nil if no tags were found" do
+      expect(subject).to receive(:all_deploy_tags).with(prefix: "deploy", environment: "prod").and_return([])
+      expect(subject.last_deploy_tag(prefix: "deploy", environment: "prod")).to be_nil
+    end
+  end
+
+  describe "#get_commit_sha" do
+    it "returns the commit SHA from a short SHA" do
+      commit_data = {
+        sha: "09ff8ac8a27362bef300b7fc0ca387af5a82f142",
+        node_id: "MDY6Q29tbWl0MjE4NTUxNjg2OjA5ZmY4YWM4YTI3MzYyYmVmMzAwYjdmYzBjYTM4N2FmNWE4MmYxNDI=",
+      }
+      expect(octokit).to receive(:commit).with("fac/example", "09ff8ac").and_return(commit_data)
+      expect(subject.get_commit_sha("09ff8ac")).to eq("09ff8ac8a27362bef300b7fc0ca387af5a82f142")
+    end
+
+    it "raises a LookupError if the commit can't be found" do
+      expect(octokit).to receive(:commit).with("fac/example", "1234567").and_return(nil)
+      expect do
+        subject.get_commit_sha("1234567")
+      end.to raise_error(FaHarnessTools::LookupError, "Unable to find commit 1234567 in Git repo")
+    end
+  end
+
   describe "#get_commit_sha_from_tag" do
     it "returns the commit SHA from a lightweight tag" do
       tag_data = {
