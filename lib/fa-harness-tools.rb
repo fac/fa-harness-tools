@@ -1,3 +1,4 @@
+require "fa-harness-tools/check_logger"
 require "fa-harness-tools/check_branch_protection"
 require "fa-harness-tools/check_forward_deploy"
 require "fa-harness-tools/check_recent_deploy"
