@@ -9,11 +9,13 @@ export GITHUB_OAUTH_TOKEN="${secrets.getValue("github-oauth-token")}"
 run() {
   CMD=$1
   shift
+  echo
   $CMD \
     --build-no "${artifact.buildNo}" \
     --environment "${env.name}" \
     --repository "${artifact.source.repositoryName}" \
     "$@"
+  echo
 }
 
 # 1. Check we're within the daily deployment schedule
