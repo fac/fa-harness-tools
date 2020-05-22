@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "octokit", "~> 4.0"
+  spec.add_runtime_dependency "pastel", "~> 0.7"
   spec.add_runtime_dependency "tzinfo", "~> 2.0"
   spec.add_runtime_dependency "tzinfo-data", "~> 1.0"
 

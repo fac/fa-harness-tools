@@ -1,12 +1,15 @@
+require "pastel"
+
 module FaHarnessTools
   class CheckLogger
     def initialize(name:, description:)
       @name = name
       @description = description
+      @pastel = Pastel.new(enabled: true)
     end
 
     def start
-      puts %{Starting "#{@name}" (#{@description})}
+      puts @pastel.cyan(@pastel.bold(@name), %{ (#{@description})})
     end
 
     def info(message)
@@ -19,12 +22,12 @@ module FaHarnessTools
     end
 
     def pass(message)
-      puts "PASS: #{message}"
+      puts @pastel.green("PASS: #{message}")
       true
     end
 
     def fail(message)
-      puts "FAIL: #{message}"
+      puts @pastel.red("FAIL: #{message}")
       false
     end
   end
