@@ -13,7 +13,7 @@ describe FaHarnessTools::CheckRecentDeploy do
       instance_double(FaHarnessTools::GithubClient)
     end
     let(:harness_context) do
-      instance_double(FaHarnessTools::HarnessContext)
+      instance_double(FaHarnessTools::HarnessContext, environment: "production")
     end
     let(:git_tags) do
       [
@@ -23,23 +23,34 @@ describe FaHarnessTools::CheckRecentDeploy do
         { name: "harness-deploy-production-2019-10-26T13-40-00Z", tag_sha: "900000" },
       ]
     end
+    let(:logger) do
+      spy(FaHarnessTools::CheckLogger, pass: true, fail: false)
+    end
 
     before do
-      allow(harness_context).to receive(:environment).and_return("production")
+      allow(FaHarnessTools::CheckLogger).to receive(:new).and_return(logger)
       allow(client).to receive(:all_deploy_tags).and_return(git_tags)
       allow(client).to receive(:get_commit_sha_from_tag).with(git_tags[2]).and_return("234567")
     end
 
-    context "with no git tags" do
+    context "with no git tags on first deploy" do
       let(:git_tags) { [] }
 
-      it "returns true on first deploy" do
+      before do
         allow(harness_context).to receive(:new_commit_sha).and_return("234567")
-        expect(subject.verify?).to eq([true, "first deploy"])
+      end
+
+      it "returns true" do
+        expect(subject.verify?).to be true
+      end
+
+      it "logs the pass message" do
+        subject.verify?
+        expect(logger).to have_received(:pass).with("this is the first recorded deployment so is permitted")
       end
     end
 
-    context "with one git tag" do
+    context "with one git tag and deploying the existing tag" do
       let(:git_tags) do
         [
           { name: "harness-deploy-production-2019-10-26T13-40-00Z", commit: { sha: "200000" } },
@@ -48,31 +59,66 @@ describe FaHarnessTools::CheckRecentDeploy do
 
       before do
         allow(client).to receive(:get_commit_sha_from_tag).with(git_tags[0]).and_return("123456")
-      end
-
-      it "returns true when deploying only existing tag" do
         allow(harness_context).to receive(:new_commit_sha).and_return("234567")
         allow(client).to receive(:is_ancestor_of?).with("123456", "234567").and_return(true)
-        expect(subject.verify?).to eq([true, "234567 is ahead of no.3 most recent commit with \"harness-deploy\" tag"])
+      end
+
+      it "returns true" do
+        expect(subject.verify?).to be true
+      end
+
+      it "logs the pass message" do
+        subject.verify?
+        expect(logger).to have_received(:pass).with("the commit being deployed is more recent than the last permitted rollback commit")
       end
     end
 
-    it "returns true for latest commit beyond rollback tag" do
-      allow(harness_context).to receive(:new_commit_sha).and_return("567890")
-      allow(client).to receive(:is_ancestor_of?).with("234567", "567890").and_return(true)
-      expect(subject.verify?).to eq([true, "567890 is ahead of no.3 most recent commit with \"harness-deploy\" tag"])
+    context "with latest commit after rollback tag" do
+      before do
+        allow(harness_context).to receive(:new_commit_sha).and_return("567890")
+        allow(client).to receive(:is_ancestor_of?).with("234567", "567890").and_return(true)
+      end
+
+      it "returns true" do
+        expect(subject.verify?).to be true
+      end
+
+      it "logs the pass message" do
+        subject.verify?
+        expect(logger).to have_received(:pass).with("the commit being deployed is more recent than the last permitted rollback commit")
+      end
     end
 
-    it "returns true for oldest allowed rollback tag" do
-      allow(harness_context).to receive(:new_commit_sha).and_return("234567")
-      allow(client).to receive(:is_ancestor_of?).with("234567", "234567").and_return(true)
-      expect(subject.verify?).to eq([true, "234567 is ahead of no.3 most recent commit with \"harness-deploy\" tag"])
+    context "with oldest allowed rollback tag" do
+      before do
+        allow(harness_context).to receive(:new_commit_sha).and_return("234567")
+        allow(client).to receive(:is_ancestor_of?).with("234567", "234567").and_return(true)
+      end
+
+      it "returns true" do
+        expect(subject.verify?).to be true
+      end
+
+      it "logs the pass message" do
+        subject.verify?
+        expect(logger).to have_received(:pass).with("the commit being deployed is more recent than the last permitted rollback commit")
+      end
     end
 
-    it "returns false for older than allowed rollback tag" do
-      allow(harness_context).to receive(:new_commit_sha).and_return("123456")
-      allow(client).to receive(:is_ancestor_of?).with("234567", "123456").and_return(false)
-      expect(subject.verify?).to eq([false, "123456 is prior to no.3 most recent commit with \"harness-deploy\" tag"])
+    context "with commit older than allowed rollback tag" do
+      before do
+        allow(harness_context).to receive(:new_commit_sha).and_return("123456")
+        allow(client).to receive(:is_ancestor_of?).with("234567", "123456").and_return(false)
+      end
+
+      it "returns false" do
+        expect(subject.verify?).to be false
+      end
+
+      it "logs the pass message" do
+        subject.verify?
+        expect(logger).to have_received(:fail).with("the commit being deployed is older than the last permitted rollback commit")
+      end
     end
   end
 end

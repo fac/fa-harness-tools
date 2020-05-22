@@ -54,10 +54,4 @@ result = FaHarnessTools::CheckRecentDeploy.new(
   allowed_rollback_count: options.fetch(:allowed_rollback_count),
 ).verify?
 
-if result.first
-  puts result.last
-  exit 0
-else
-  $stderr.puts result.last
-  exit 1
-end
+exit result ? 0 : 1

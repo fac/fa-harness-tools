@@ -27,9 +27,16 @@ module FaHarnessTools
       @context = context
       @tag_prefix = tag_prefix
       @allowed_rollback_count = allowed_rollback_count
+      @logger = CheckLogger.new(
+        name: "Check recent deploys",
+        description: "Only allow deployments of recent commits, up to #{@allowed_rollback_count} deployment rollbacks",
+      )
     end
 
     def verify?
+      @logger.start
+      @logger.context_info(@client, @context)
+
       tags = @client.
         all_deploy_tags(prefix: @tag_prefix, environment: @context.environment).
         sort_by { |tag| tag[:name] }
@@ -39,16 +46,20 @@ module FaHarnessTools
       if latest_allowed_tag.nil?
         # If no previous deploys we need to let it deploy otherwise it will
         # never get past this check!
-        return true, "first deploy"
+        @logger.info "no #{@tag_prefix} tag was found, so this must be the first deployment"
+        return @logger.pass("this is the first recorded deployment so is permitted")
       end
+
+      @logger.info("the most recent tag allowed is #{latest_allowed_tag[:name]}")
 
       latest_allowed_rev = @client.get_commit_sha_from_tag(latest_allowed_tag)
       rev = @context.new_commit_sha
+      @logger.info("which means the currently deployed commit is #{latest_allowed_rev}")
 
       if @client.is_ancestor_of?(latest_allowed_rev, rev)
-        [true, "#{rev} is ahead of no.#{@allowed_rollback_count} most recent commit with #{@tag_prefix.inspect} tag"]
+        @logger.pass "the commit being deployed is more recent than the last permitted rollback commit"
       else
-        [false, "#{rev} is prior to no.#{@allowed_rollback_count} most recent commit with #{@tag_prefix.inspect} tag"]
+        @logger.fail "the commit being deployed is older than the last permitted rollback commit"
       end
     end
   end
