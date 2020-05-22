@@ -21,6 +21,18 @@ describe FaHarnessTools::CheckLogger do
     end
   end
 
+  describe "#context_info" do
+    it "logs the repo, environment and commit SHA" do
+      client = instance_double(FaHarnessTools::GithubClient, owner_repo: "fac/example")
+      context = instance_double(FaHarnessTools::HarnessContext, new_commit_sha: "123456", environment: "prod")
+      expected = "  ... we're deploying repo fac/example into environment prod\n  ... we're trying to deploy commit 123456\n"
+
+      expect do
+        subject.context_info(client, context)
+      end.to output(expected).to_stdout
+    end
+  end
+
   describe "#pass" do
     it "returns true" do
       expect(subject.pass("commit can be deployed")).to be true

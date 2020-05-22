@@ -13,10 +13,9 @@ module FaHarnessTools
 
     def verify?
       @logger.start
-      @logger.info("we're deploying repo #{@client.owner_repo} into environment #{@context.environment}")
+      @logger.context_info(@client, @context)
 
       new_sha = @context.new_commit_sha
-      @logger.info("we're trying to deploy commit #{new_sha}")
 
       @logger.info("checking if #{@branch} branch contains the commit")
       if @client.branch_contains?(@branch, new_sha)
