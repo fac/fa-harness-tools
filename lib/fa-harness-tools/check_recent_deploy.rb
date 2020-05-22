@@ -54,7 +54,7 @@ module FaHarnessTools
 
       latest_allowed_rev = @client.get_commit_sha_from_tag(latest_allowed_tag)
       rev = @context.new_commit_sha
-      @logger.info("which means the currently deployed commit is #{latest_allowed_rev}")
+      @logger.info("which means the most recent commit allowed is #{latest_allowed_rev}")
 
       if @client.is_ancestor_of?(latest_allowed_rev, rev)
         @logger.pass "the commit being deployed is more recent than the last permitted rollback commit"
