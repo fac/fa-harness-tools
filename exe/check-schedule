@@ -10,10 +10,4 @@ end.parse!
 
 result = FaHarnessTools::CheckSchedule.new.verify?
 
-if result.first
-  puts result.last
-  exit 0
-else
-  $stderr.puts result.last
-  exit 1
-end
+exit result ? 0 : 1
