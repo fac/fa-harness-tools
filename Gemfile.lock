@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fa-harness-tools (1.0.5)
+    fa-harness-tools (1.1.0)
       octokit (~> 4.0)
       pastel (~> 0.7)
       tzinfo (~> 2.0)
