@@ -13,25 +13,36 @@ module FaHarnessTools
       @client = client
       @context = context
       @tag_prefix = tag_prefix
+      @logger = CheckLogger.new(
+        name: "Check forward deploy",
+        description: "Only allow deployments that are newer than what's currently deployed",
+      )
     end
 
     def verify?
+      @logger.start
+      @logger.context_info(@client, @context)
+
       current_tag = @client.last_deploy_tag(
         prefix: @tag_prefix, environment: @context.environment)
 
       if current_tag.nil?
         # If no previous deploys we need to let it deploy otherwise it will
         # never get past this check!
-        return true, "first deploy"
+        @logger.info "no #{@tag_prefix} tag was found, so this must be the first deployment"
+        return @logger.pass("this is the first recorded deployment so is permitted")
       end
+
+      @logger.info("the most recent deployment is #{current_tag[:name]}")
 
       current_deployed_rev = current_tag[:commit][:sha]
       rev = @context.new_commit_sha
+      @logger.info("which means the currently deployed commit is #{current_deployed_rev}")
 
       if @client.is_ancestor_of?(current_deployed_rev, rev)
-        [true, "forward deploy, #{rev} is ahead of #{current_deployed_rev}"]
+        @logger.pass "the commit being deployed is more recent than the currently deployed commit"
       else
-        [false, "not a forward deploy, #{rev} is behind #{current_deployed_rev}"]
+        @logger.fail "the commit being deployed is before the currently deployed commit, so would revert changes"
       end
     end
   end

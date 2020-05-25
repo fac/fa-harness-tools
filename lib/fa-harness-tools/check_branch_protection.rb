@@ -5,14 +5,23 @@ module FaHarnessTools
       @client = client
       @context = context
       @branch = branch
+      @logger = CheckLogger.new(
+        name: "Check branch protection",
+        description: "Only allow commits on the #{@branch} branch to be deployed",
+      )
     end
 
     def verify?
+      @logger.start
+      @logger.context_info(@client, @context)
+
       new_sha = @context.new_commit_sha
+
+      @logger.info("checking if #{@branch} branch contains the commit")
       if @client.branch_contains?(@branch, new_sha)
-        [true, "#{@branch} contains #{new_sha}"]
+        @logger.pass "#{@branch} contains #{new_sha}"
       else
-        [false, "#{@branch} does not contain #{new_sha}"]
+        @logger.fail "#{@branch} does not contain #{new_sha}"
       end
     end
   end

@@ -97,6 +97,9 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 =end
+
+  # Hide messages on stdout from CheckLogger
+  config.before { allow($stdout).to receive(:puts) }
 end
 
 require "fa-harness-tools"

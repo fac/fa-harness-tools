@@ -9,7 +9,7 @@ module FaHarnessTools
     end
 
     def new_commit_sha
-      @client.get_commit_sha(@build_no)
+      @new_commit_sha ||= @client.get_commit_sha(@build_no)
     end
   end
 end
