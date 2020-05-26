@@ -3,11 +3,32 @@
 require "fa-harness-tools"
 require "optparse"
 
-options = {}
+options = {
+  schedules: [],
+  timezone: "Europe/London",
+}
 OptionParser.new do |opts|
   opts.banner = "Usage: check-schedule [options]"
+
+  opts.on("--schedule CRON", "Schedule defines a window in which a deployment can take place. Accepts cron syntax, e.g. '* 9-15 * * mon-thu'") do |v|
+    options[:schedules] << v
+  end
+
+  opts.on("--timezone TIMEZONE", "Specify the timezone which the schedule will be checked in, e.g. 'Europe/London'") do |v|
+    options[:timezone] = v
+  end
 end.parse!
 
-result = FaHarnessTools::CheckSchedule.new.verify?
+def schedules(options)
+  if options[:schedules].length == 0
+    options[:schedules] = [
+      "* 9-15 * * mon-thu",
+      "* 9-11 * * fri",
+    ]
+  end
+  options[:schedules].map { |schedule| FaHarnessTools::Schedule.new(schedule: schedule.to_s) }
+end
+
+result = FaHarnessTools::CheckSchedule.new(timezone: options[:timezone], schedules: schedules(options)).verify?
 
 exit result ? 0 : 1

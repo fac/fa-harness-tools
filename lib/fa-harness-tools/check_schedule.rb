@@ -3,16 +3,9 @@ require "tzinfo"
 
 module FaHarnessTools
   # Check against the time of day so you can restrict deploying to sensible
-  # hours. Uses local London time by default.
-  #
-  # Restricts to Mon-Thu from 9am to 4pm, Fri from 9am to 12pm by default.
+  # hours.
   class CheckSchedule
-    def initialize(timezone: "Europe/London",
-                   schedules:[
-                     Schedule.new(schedule: "* 9-15 * * mon-thu"),
-                     Schedule.new(schedule: "* 9-11 * * fri")
-                    ]
-                  )
+    def initialize(timezone:, schedules:)
       tz = TZInfo::Timezone.get(timezone)
       @timezone = timezone
       @now = tz.to_local(Time.now.utc)

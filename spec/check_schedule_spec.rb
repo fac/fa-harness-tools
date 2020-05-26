@@ -1,4 +1,13 @@
 describe FaHarnessTools::CheckSchedule do
+  subject do
+    described_class.new(
+      timezone: "Europe/London",
+      schedules:[
+        FaHarnessTools::Schedule.new(schedule: "* 9-15 * * mon-thu"),
+        FaHarnessTools::Schedule.new(schedule: "* 9-11 * * fri")
+      ]
+    )
+  end
   describe "#verify?" do
     let(:logger) do
       spy(FaHarnessTools::CheckLogger, pass: true, fail: false)
