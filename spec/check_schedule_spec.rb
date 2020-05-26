@@ -40,6 +40,11 @@ describe FaHarnessTools::CheckSchedule do
         subject.verify?
         expect(logger).to have_received(:pass).with("inside the deployment schedule")
       end
+
+      it "include the schedule which passed the check" do
+        subject.verify?
+        expect(logger).to have_received(:info).with("deployments are allowed due to the following schedule: * 9-15 * * mon-thu")
+      end
     end
 
     context "at 4pm on Monday outside deployment window" do
@@ -69,6 +74,11 @@ describe FaHarnessTools::CheckSchedule do
       it "logs the pass message" do
         subject.verify?
         expect(logger).to have_received(:pass).with("inside the deployment schedule")
+      end
+
+      it "include the schedule which passed the check" do
+        subject.verify?
+        expect(logger).to have_received(:info).with("deployments are allowed due to the following schedule: * 9-11 * * fri")
       end
     end
 

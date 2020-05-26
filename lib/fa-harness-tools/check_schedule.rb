@@ -5,12 +5,18 @@ module FaHarnessTools
   # Check against the time of day so you can restrict deploying to sensible
   # hours. Uses local London time by default.
   #
-  # Restricts to Mon-Thu from 9am to 4pm, Fri from 9am to 12pm.
+  # Restricts to Mon-Thu from 9am to 4pm, Fri from 9am to 12pm by default.
   class CheckSchedule
-    def initialize(timezone: "Europe/London")
+    def initialize(timezone: "Europe/London",
+                   schedules:[
+                     Schedule.new(schedule: "* 9-15 * * mon-thu"),
+                     Schedule.new(schedule: "* 9-11 * * fri")
+                    ]
+                  )
       tz = TZInfo::Timezone.get(timezone)
       @timezone = timezone
       @now = tz.to_local(Time.now.utc)
+      @schedules = schedules
       @logger = CheckLogger.new(
         name: "Check deployment schedule",
         description: "Only allow deployments within certain times of the day",
@@ -22,14 +28,10 @@ module FaHarnessTools
       @logger.info("operating in the #{@timezone} timezone")
       @logger.info("local time is #{@now}")
 
-      permitted = false
-      case @now.wday
-      when 1..4
-        @logger.info("deployments are allowed between 9am to 4pm today (Mon-Thu)")
-        permitted = true if @now.hour >= 9 && @now.hour < 16
-      when 5
-        @logger.info("deployments are allowed between 9am to 12pm today (Fri)")
-        permitted = true if @now.hour >= 9 && @now.hour < 12
+      permitted = @schedules.any? do |schedule|
+        can_run = schedule.can_run?(time: @now)
+        @logger.info("deployments are allowed due to the following schedule: #{schedule.to_s}") if can_run
+        can_run
       end
 
       if permitted
