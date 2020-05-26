@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "pastel", "~> 0.7"
   spec.add_runtime_dependency "tzinfo", "~> 2.0"
   spec.add_runtime_dependency "tzinfo-data", "~> 1.0"
+  spec.add_runtime_dependency "fugit", "~> 1.3"
 
   spec.add_development_dependency "bundler", "~> 1.0"
   spec.add_development_dependency "rake", "~> 13.0"
