@@ -1,5 +1,17 @@
 describe FaHarnessTools::Schedule do
-  subject { FaHarnessTools::Schedule.new(schedule: "* 9-15 * * mon-thu" )}
+  subject { described_class.new(schedule: "* 9-15 * * mon-thu" ) }
+
+  describe "#initialize" do
+    context "when an invalid schedule is given" do
+      it "raises a helpful error" do
+        expected_message = "'Not a valid schedule' can not be parsed"
+
+        expect do
+          described_class.new(schedule: "Not a valid schedule")
+        end.to raise_error FaHarnessTools::InvalidScheduleError, expected_message
+      end
+    end
+  end
 
   describe "#can_run?" do
     context "given a time within the time window" do

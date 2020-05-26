@@ -10,4 +10,5 @@ require "fa-harness-tools/version"
 
 module FaHarnessTools
   LookupError = Class.new(StandardError)
+  InvalidScheduleError = Class.new(StandardError)
 end

@@ -7,6 +7,7 @@ module FaHarnessTools
     def initialize(schedule:)
       @schedule = schedule
       @cron_schedule = Fugit.parse(schedule)
+      raise InvalidScheduleError, "'#{schedule}' can not be parsed" unless @cron_schedule
     end
 
     def can_run?(time:)
