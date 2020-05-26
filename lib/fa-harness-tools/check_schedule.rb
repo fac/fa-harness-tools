@@ -30,6 +30,7 @@ module FaHarnessTools
       if permitted
         @logger.pass "inside the deployment schedule"
       else
+        @logger.info "failed to match any schedule #{@schedules.map(&:to_s).join(", ")}"
         @logger.fail "outside the deployment schedule"
       end
     end

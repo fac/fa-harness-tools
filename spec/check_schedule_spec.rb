@@ -33,6 +33,7 @@ describe FaHarnessTools::CheckSchedule do
       it "logs the fail message" do
         subject.verify?
         expect(logger).to have_received(:fail).with("outside the deployment schedule")
+        expect(logger).to have_received(:info).with("failed to match any schedule * 9-15 * * mon-thu, * 9-11 * * fri")
       end
     end
 
@@ -118,6 +119,7 @@ describe FaHarnessTools::CheckSchedule do
       it "logs the fail message" do
         subject.verify?
         expect(logger).to have_received(:fail).with("outside the deployment schedule")
+        expect(logger).to have_received(:info).with("failed to match any schedule * 9-15 * * mon-thu, * 9-11 * * fri")
       end
     end
 
