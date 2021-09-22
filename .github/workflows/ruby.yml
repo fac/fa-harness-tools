@@ -1,20 +1,39 @@
-name: Ruby
+name: CICD
 
 on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Ruby 2.5
-      uses: actions/setup-ruby@v1
-      with:
-        ruby-version: 2.5.x
-    - name: Build and test with Rake
-      run: |
-        gem install bundler -v 1.16.4
-        bundle install --jobs 4 --retry 3
-        bundle exec rake
+      - uses: actions/checkout@v1
+      - name: Set up Ruby 2.5
+        uses: actions/setup-ruby@v1
+      - name: Build and test with Rake
+        run: |
+          gem install bundler -v 1.16.4
+          bundle install --jobs 4 --retry 3
+          bundle exec rake
+
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/master' }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1 # .ruby-version
+        with:
+          bundler-cache: true    # bundle install
+
+      - run: bundle exec rake build
+
+      - uses: fac/ruby-gem-setup-credentials-action@v2
+        with:
+          user: ""
+          key: rubygems
+          token: ${{ secrets.FAC_RUBYGEMS_KEY }}
+
+      - uses: fac/ruby-gem-push-action@v2
+        with:
+          key: github
