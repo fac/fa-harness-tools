@@ -1,5 +1,7 @@
 # fa-harness-tools
 
+#### https://rubygems.org/gems/fa-harness-tools
+
 FreeAgent-specific pre-flight checks and tools that are designed to work in [Harness](https://harness.io).
 
 ## Installation
@@ -82,7 +84,9 @@ After checking out the repo, run `bin/setup` to install dependencies. You can al
 
 To install this gem onto your local machine, run `bundle exec rake install`.
 
-To release a new version, update the version number in `version.rb`, run `bundle` and commit the version bump. Then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To release a new version, update the version number in `version.rb`. After your PR is merged to master, the CICD GitHub Action workflow will release to RubyGems automatically:
+Gem is hosted publicly here:
+https://rubygems.org/gems/fa-harness-tools
 
 The Ruby version used matches the one from the `harness/delegate` Docker image.
 
