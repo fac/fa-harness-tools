@@ -22,8 +22,7 @@ end.parse!
 def schedules(options)
   if options[:schedules].length == 0
     options[:schedules] = [
-      "* 9-15 * * mon-thu",
-      "* 9-11 * * fri",
+      "* 9-15 * * mon-fri",
     ]
   end
   options[:schedules].map { |schedule| FaHarnessTools::Schedule.new(schedule: schedule.to_s) }
