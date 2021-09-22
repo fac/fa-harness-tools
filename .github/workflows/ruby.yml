@@ -3,13 +3,14 @@ name: CICD
 on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
       - name: Set up Ruby 2.5
         uses: actions/setup-ruby@v1
+
       - name: Build and test with Rake
         run: |
           gem install bundler -v 1.16.4
@@ -17,6 +18,7 @@ jobs:
           bundle exec rake
 
   release:
+    needs: test
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/master' }}
 
