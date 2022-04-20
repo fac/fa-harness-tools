@@ -35,6 +35,15 @@ module FaHarnessTools
           object: ref[:object],
         }
       end
+    rescue Octokit::BadGateway
+      # rescue from 502 - when there are too many tags and GitHub doesn't respond
+      # scope the tags found to the current year
+      @octokit.refs(owner_repo, "tags/#{prefix}-#{environment}-#{DateTime.now.year}").map do |ref|
+        {
+          name: ref[:ref][10..-1], # remove refs/tags/ prefix
+          object: ref[:object],
+        }
+      end
     rescue Octokit::NotFound
       []
     end
