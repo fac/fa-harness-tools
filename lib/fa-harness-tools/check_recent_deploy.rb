@@ -22,10 +22,11 @@ module FaHarnessTools
   # Notes if the tag `production-deploy-` doesn't exist in Git history, the check returns allow
   #
   class CheckRecentDeploy
-    def initialize(client:, context:, tag_prefix:, allowed_rollback_count:)
+    def initialize(client:, context:, tag_prefix:, new_sha:, allowed_rollback_count:)
       @client = client
       @context = context
       @tag_prefix = tag_prefix
+      @new_sha = new_sha
       @allowed_rollback_count = allowed_rollback_count
       @logger = CheckLogger.new(
         name: "Check recent deploys",
@@ -35,7 +36,7 @@ module FaHarnessTools
 
     def verify?
       @logger.start
-      @logger.context_info(@client, @context)
+      @logger.context_info(@client, @context, @new_sha)
 
       tags = @client.
         all_deploy_tags(prefix: @tag_prefix, environment: @context.environment).
@@ -53,10 +54,9 @@ module FaHarnessTools
       @logger.info("the most recent tag allowed is #{latest_allowed_tag[:name]}")
 
       latest_allowed_rev = @client.get_commit_sha_from_tag(latest_allowed_tag)
-      rev = @context.new_commit_sha
       @logger.info("which means the most recent commit allowed is #{latest_allowed_rev}")
 
-      if @client.is_ancestor_of?(latest_allowed_rev, rev)
+      if @client.is_ancestor_of?(latest_allowed_rev, @new_sha)
         @logger.pass "the commit being deployed is more recent than the last permitted rollback commit"
       else
         @logger.fail "the commit being deployed is older than the last permitted rollback commit"

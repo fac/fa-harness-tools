@@ -9,10 +9,11 @@ module FaHarnessTools
   # If there are none of those tags at all it will allow, to avoid creating an
   # un-passable check!
   class CheckForwardDeploy
-    def initialize(client:, context:, tag_prefix:)
+    def initialize(client:, context:, tag_prefix:, new_sha:)
       @client = client
       @context = context
       @tag_prefix = tag_prefix
+      @new_sha = new_sha
       @logger = CheckLogger.new(
         name: "Check forward deploy",
         description: "Only allow deployments that are newer than what's currently deployed",
@@ -21,10 +22,11 @@ module FaHarnessTools
 
     def verify?
       @logger.start
-      @logger.context_info(@client, @context)
+      @logger.context_info(@client, @context, @new_sha)
 
       current_tag = @client.last_deploy_tag(
-        prefix: @tag_prefix, environment: @context.environment)
+        prefix: @tag_prefix, environment: @context.environment,
+      )
 
       if current_tag.nil?
         # If no previous deploys we need to let it deploy otherwise it will
@@ -36,10 +38,9 @@ module FaHarnessTools
       @logger.info("the most recent deployment is #{current_tag[:name]}")
 
       current_deployed_rev = current_tag[:commit][:sha]
-      rev = @context.new_commit_sha
       @logger.info("which means the currently deployed commit is #{current_deployed_rev}")
 
-      if @client.is_ancestor_of?(current_deployed_rev, rev)
+      if @client.is_ancestor_of?(current_deployed_rev, new_sha)
         @logger.pass "the commit being deployed is more recent than the currently deployed commit"
       else
         @logger.fail "the commit being deployed is before the currently deployed commit, so would revert changes"

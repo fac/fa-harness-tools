@@ -16,9 +16,9 @@ module FaHarnessTools
       puts "  ... #{message}"
     end
 
-    def context_info(client, context)
+    def context_info(client, context, new_sha)
       info("we're deploying repo #{client.owner_repo} into environment #{context.environment}")
-      info("we're trying to deploy commit #{context.new_commit_sha}")
+      info("we're trying to deploy commit #{new_sha}")
     end
 
     def pass(message)
