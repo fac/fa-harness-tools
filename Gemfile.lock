@@ -76,11 +76,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.0)
+  bundler (~> 2.3)
   fa-harness-tools!
   rake (~> 13.0)
   rspec (~> 3.8)
   timecop (~> 0.9)
 
 BUNDLED WITH
-   1.17.2
+   2.4.10

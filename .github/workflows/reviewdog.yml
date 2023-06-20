@@ -7,7 +7,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: actionlint
-        uses: reviewdog/action-actionlint@v1.2.0
+        uses: reviewdog/action-actionlint@v1
         with:
           fail_on_error: true
           reporter: github-pr-review
