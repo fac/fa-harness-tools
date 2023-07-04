@@ -7,6 +7,13 @@ module FaHarnessTools
 
     def initialize(oauth_token:, owner:, repo:)
       @octokit = Octokit::Client.new(access_token: oauth_token)
+      @octokit.connection_options = {
+        request: {
+          open_timeout: 60,
+          timeout: 60
+        }
+      }
+
       @owner = owner
       @repo = repo
       @oauth_token = oauth_token
