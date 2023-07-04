@@ -11,6 +11,7 @@ describe FaHarnessTools::GithubClient do
 
   before do
     allow(Octokit::Client).to receive(:new).with(access_token: "none").and_return(octokit)
+    allow(octokit).to receive(:connection_options=)
     allow(octokit).to receive(:repo).with("fac/example")
   end
 
