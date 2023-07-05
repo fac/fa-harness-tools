@@ -5,7 +5,8 @@ require "optparse"
 
 options = {
   github_owner: "fac",
-  tag_prefix: "harness-deploy",
+  tag_prefix: nil,
+  current_sha: nil
 }
 OptionParser.new do |opts|
   opts.banner = "Usage: check-forward-deploy [options]"
@@ -29,6 +30,10 @@ OptionParser.new do |opts|
   opts.on("--tag-prefix PREFIX", "Git tag prefix, defaults to 'harness-deploy'") do |v|
     options[:tag_prefix] = v
   end
+
+  opts.on("--current-sha SHA", "SHA currently deployed") do |v|
+    options[:current_sha] = v
+  end
 end.parse!
 
 client = FaHarnessTools::GithubClient.new(
@@ -45,7 +50,8 @@ context = FaHarnessTools::HarnessContext.new(
 result = FaHarnessTools::CheckForwardDeploy.new(
   client: client,
   context: context,
-  tag_prefix: options.fetch(:tag_prefix),
+  tag_prefix: options.fetch(:tag_prefix, nil),
+  current_sha: options.fetch(:current_sha, nil) 
 ).verify?
 
 exit result ? 0 : 1

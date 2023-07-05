@@ -6,7 +6,8 @@ require "optparse"
 options = {
   allowed_rollback_count: 3,
   github_owner: "fac",
-  tag_prefix: "harness-deploy",
+  tag_prefix: nil,
+  current_sha: nil
 }
 OptionParser.new do |opts|
   opts.banner = "Usage: check-recent-deploy [options]"
@@ -34,6 +35,10 @@ OptionParser.new do |opts|
   opts.on("--tag-prefix PREFIX", "Git tag prefix, defaults to 'harness-deploy'") do |v|
     options[:tag_prefix] = v
   end
+
+  opts.on("--current-sha SHA", "SHA currently deployed") do |v|
+    options[:current_sha] = v
+  end
 end.parse!
 
 client = FaHarnessTools::GithubClient.new(
@@ -51,6 +56,7 @@ result = FaHarnessTools::CheckRecentDeploy.new(
   client: client,
   context: context,
   tag_prefix: options.fetch(:tag_prefix),
+  current_sha: option.fetch(:current_sha),
   allowed_rollback_count: options.fetch(:allowed_rollback_count),
 ).verify?
 

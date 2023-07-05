@@ -9,10 +9,11 @@ module FaHarnessTools
   # If there are none of those tags at all it will allow, to avoid creating an
   # un-passable check!
   class CheckForwardDeploy
-    def initialize(client:, context:, tag_prefix:)
+    def initialize(client:, context:, tag_prefix:nil, current_sha:nil)
       @client = client
       @context = context
       @tag_prefix = tag_prefix
+      @current_sha = current_sha
       @logger = CheckLogger.new(
         name: "Check forward deploy",
         description: "Only allow deployments that are newer than what's currently deployed",
@@ -23,21 +24,27 @@ module FaHarnessTools
       @logger.start
       @logger.context_info(@client, @context)
 
-      current_tag = @client.last_deploy_tag(
-        prefix: @tag_prefix, environment: @context.environment)
+      if @tag_prefix
+        current_tag = @client.last_deploy_tag(
+          prefix: @tag_prefix, environment: @context.environment)
 
-      if current_tag.nil?
-        # If no previous deploys we need to let it deploy otherwise it will
-        # never get past this check!
-        @logger.info "no #{@tag_prefix} tag was found, so this must be the first deployment"
-        return @logger.pass("this is the first recorded deployment so is permitted")
+        if current_tag.nil?
+          # If no previous deploys we need to let it deploy otherwise it will
+          # never get past this check!
+          @logger.info "no #{@tag_prefix} tag was found, so this must be the first deployment"
+          return @logger.pass("this is the first recorded deployment so is permitted")
+        end
+
+        @logger.info("the most recent deployment is #{current_tag[:name]}")
+
+        current_deployed_rev = current_tag[:commit][:sha]
+      else
+        current_deployed_rev = @current_sha
       end
 
-      @logger.info("the most recent deployment is #{current_tag[:name]}")
+      @logger.info("the currently deployed commit is #{current_deployed_rev}")
 
-      current_deployed_rev = current_tag[:commit][:sha]
       rev = @context.new_commit_sha
-      @logger.info("which means the currently deployed commit is #{current_deployed_rev}")
 
       if @client.is_ancestor_of?(current_deployed_rev, rev)
         @logger.pass "the commit being deployed is more recent than the currently deployed commit"
